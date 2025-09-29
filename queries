@@ -1,1 +1,182 @@
+A — Ranking (ROW_NUMBER, RANK, DENSE_RANK, PERCENT_RANK)
+A)ROW_NUMBER
+
+SELECT 
+    p.product_id,
+    p.name AS product_name,
+    SUM(t.amount) AS total_revenue,
+    ROW_NUMBER() OVER (ORDER BY SUM(t.amount) DESC) AS row_num
+FROM products p
+JOIN transactions t ON p.product_id = t.product_id
+GROUP BY p.product_id, p.name
+ORDER BY row_num;
+
+b)RANK
+
+SELECT 
+    p.product_id,
+    p.name AS product_name,
+    SUM(t.amount) AS total_revenue,
+    RANK() OVER (ORDER BY SUM(t.amount) DESC) AS rank_pos
+FROM products p
+JOIN transactions t ON p.product_id = t.product_id
+GROUP BY p.product_id, p.name
+ORDER BY rank_pos;
+
+C)DENSE_RANK
+
+SELECT 
+    c.customer_id,
+    c.full_name,
+    SUM(t.amount) AS total_revenue,
+    DENSE_RANK() OVER (ORDER BY SUM(t.amount) DESC) AS dense_rank_pos
+FROM customers c
+JOIN transactions t ON c.customer_id = t.customer_id
+GROUP BY c.customer_id, c.full_name
+ORDER BY dense_rank_pos;
+
+D)PERFECT_RANK
+
+SELECT 
+    c.customer_id,
+    c.full_name,
+    SUM(t.amount) AS total_revenue,
+    PERCENT_RANK() OVER (ORDER BY SUM(t.amount) DESC) AS percent_rank
+FROM customers c
+JOIN transactions t ON c.customer_id = t.customer_id
+GROUP BY c.customer_id, c.full_name
+ORDER BY percent_rank DESC;
+
+
+
+
+
+
+
+
+
+
+
+B — Aggregate (running totals, avg/min/max with frames)
+
+
+A)RUNNING TOTALS
+
+SELECT 
+    DATE_TRUNC('month', t.sale_date) AS month,
+    p.name AS product_name,
+    SUM(t.amount) AS monthly_sales,
+    SUM(SUM(t.amount)) OVER (PARTITION BY p.product_id ORDER BY DATE_TRUNC('month', t.sale_date)
+        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS running_total
+FROM products p
+JOIN transactions t ON p.product_id = t.product_id
+GROUP BY p.product_id, p.name, DATE_TRUNC('month', t.sale_date)
+ORDER BY p.name, month;
+
+B)AVG
+
+SELECT 
+    DATE_TRUNC('month', t.sale_date) AS month,
+    SUM(t.amount) AS monthly_sales,
+    AVG(SUM(t.amount)) OVER (ORDER BY DATE_TRUNC('month', t.sale_date)
+        ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) AS avg_3months
+FROM transactions t
+GROUP BY DATE_TRUNC('month', t.sale_date)
+ORDER BY month;
+
+C)MIN
+
+SELECT 
+    DATE_TRUNC('month', t.sale_date) AS month,
+    SUM(t.amount) AS monthly_sales,
+    MIN(SUM(t.amount)) OVER () AS min_month_sales
+FROM transactions t
+GROUP BY DATE_TRUNC('month', t.sale_date)
+ORDER BY month;
+
+D)MAX
+
+SELECT 
+    DATE_TRUNC('month', t.sale_date) AS month,
+    SUM(t.amount) AS monthly_sales,
+    MAX(SUM(t.amount)) OVER () AS max_month_sales
+FROM transactions t
+GROUP BY DATE_TRUNC('month', t.sale_date)
+ORDER BY month;
+
+
+
+
+
+
+
+C — Navigation (LAG, LEAD) — MoM growth %
+
+A)LAG
+
+SELECT
+    DATE_TRUNC('month', t.sale_date) AS month,
+    p.name AS product_name,
+    SUM(t.amount) AS monthly_sales,
+    LAG(SUM(t.amount)) OVER (PARTITION BY p.product_id ORDER BY DATE_TRUNC('month', t.sale_date)) AS prev_month
+FROM products p
+JOIN transactions t ON p.product_id = t.product_id
+GROUP BY p.product_id, p.name, DATE_TRUNC('month', t.sale_date)
+ORDER BY p.name, month;
+
+B)LEAD
+
+SELECT
+    DATE_TRUNC('month', t.sale_date) AS month,
+    SUM(t.amount) AS monthly_sales,
+    LEAD(SUM(t.amount)) OVER (ORDER BY DATE_TRUNC('month', t.sale_date)) AS next_month
+FROM transactions t
+GROUP BY DATE_TRUNC('month', t.sale_date)
+ORDER BY month;
+
+C)GROWTH % WITH LAG
+
+SELECT
+    DATE_TRUNC('month', t.sale_date) AS month,
+    SUM(t.amount) AS monthly_sales,
+    ROUND(
+        (SUM(t.amount) - LAG(SUM(t.amount)) OVER (ORDER BY DATE_TRUNC('month', t.sale_date))) * 100.0
+        / NULLIF(LAG(SUM(t.amount)) OVER (ORDER BY DATE_TRUNC('month', t.sale_date)),0),2
+    ) AS growth_percent
+FROM transactions t
+GROUP BY DATE_TRUNC('month', t.sale_date)
+ORDER BY month;
+
+
+
+D — Distribution (NTILE, CUME_DIST) — customer quartiles
+
+A)NTILE
+
+SELECT 
+    c.customer_id,
+    c.full_name,
+    SUM(t.amount) AS total_revenue,
+    NTILE(4) OVER (ORDER BY SUM(t.amount) DESC) AS revenue_quartile
+FROM customers c
+JOIN transactions t ON c.customer_id = t.customer_id
+GROUP BY c.customer_id, c.full_name
+ORDER BY revenue_quartile;
+
+
+
+
+
+B)CUME_DIST
+
+SELECT 
+    c.customer_id,
+    c.full_name,
+    SUM(t.amount) AS total_revenue,
+    CUME_DIST() OVER (ORDER BY SUM(t.amount) DESC) AS cumulative_dist
+FROM customers c
+JOIN transactions t ON c.customer_id = t.customer_id
+GROUP BY c.customer_id, c.full_name
+ORDER BY cumulative_dist DESC;
+
 
