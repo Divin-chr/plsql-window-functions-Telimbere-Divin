@@ -21,19 +21,24 @@ outputs:
 2 — Success Criteria
 
 Top 5 products per region/quarter — computed with RANK() 
+<img width="415" height="199" alt="image" src="https://github.com/user-attachments/assets/31e201a7-6f47-46d3-94bf-fa6118c372ed" />
 
 
 Running monthly sales totals using SUM() OVER (ORDER BY month ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) 
+<img width="415" height="166" alt="image" src="https://github.com/user-attachments/assets/a5dbb0e9-9eeb-4d95-80cb-2548d932303b" />
 
 
 Month-over-month growth — computed with LAG() (percentage change vs previous month).
+<img width="415" height="150" alt="image" src="https://github.com/user-attachments/assets/f1aad5fc-39aa-4ee5-9163-6d9a77dc8259" />
 
 
 Customer quartiles — NTILE(4) to partition customers into spend quartiles for market segmentation.
+<img width="415" height="232" alt="image" src="https://github.com/user-attachments/assets/a12e1f4d-8b99-48cf-9245-2ea10cacc88d" />
 
 
 3-month moving averages — AVG() OVER (ORDER BY sale_month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) to smoothen short-term volatility.
-            
+    <img width="415" height="224" alt="image" src="https://github.com/user-attachments/assets/d87b51f2-ef97-412b-8ace-d697db6b6b44" />
+        
 
 5 — Results Analysis 
 
